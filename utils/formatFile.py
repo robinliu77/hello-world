@@ -30,16 +30,20 @@ with open(original_settings_file_path, "r") as file_input:
     for i in range(len(paragraph)):
         if len(paragraph[i]) != 0:
             subsystem_name_available = re.search(r"\[[A-Z, \/, _]+\]", paragraph[i])
-            feature_id_available = re.search(r"# Feature 0x(\w{4}) version \d{1,2}", paragraph[i])
+            feature_id_available = re.search(r"# Feature 0x(\w{4})+(?: version (\d+))?", paragraph[i])
             if subsystem_name_available is not None:
                 subsystem_name = subsystem_name_available.group(0)
                 if subsystem_name.startswith("[PRODUCT/FEATURES"):
                     if feature_id_available is not None:
                         feature_id = feature_id_available.group(0)
+                        if feature_id.find("version") == -1:
+                            feature_id = feature_id + " version 0"
                         hidpp_dict[feature_id] = paragraph[i]
                     else:
                         feature_id_list = feature_id.split(" ")
                         version = feature_id_list[-1]
+                        if not version.isdigit():
+                            version = 0
                         feature_id_list.remove(feature_id_list[-1])
                         feature_id_list.append(str(int(version) + 1))
                         feature_id = space.join(feature_id_list)
